@@ -13,6 +13,10 @@ A Home Assistant custom integration for Auckland Waste Collection that fetches r
 - 🎨 Custom Lovelace card for beautiful display
 - 🔄 Automatic updates every 12 hours
 
+## Screenshot
+
+<img src="images/card-example.png" alt="Waste Collection Card" width="400">
+
 ## Installation
 
 ### HACS (Recommended)
@@ -40,11 +44,11 @@ A Home Assistant custom integration for Auckland Waste Collection that fetches r
 3. Search for "Auckland Waste Collection"
 4. Enter your area number
 
-### Finding Your Area Number
+### Finding Your Area Number (Assessment Number)
 
-1. Go to [Auckland Council's collection day finder](https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collection-days/)
-2. Enter your address
-3. Look at the URL - your area number is the number at the end (e.g., `collection-day-702.aspx` means your area number is `702`)
+1. Go to [Auckland Council's collection day finder](https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days.html)
+2. Enter your address and search
+3. The **assessment number** shown for your property is your area number (e.g., `12345678901`)
 
 ## Sensors
 
