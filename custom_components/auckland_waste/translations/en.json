@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Auckland Waste Collection",
+        "description": "Enter your Auckland Council area number. You can find this by visiting the Auckland Council website and looking up your address. The area number is in the URL (e.g., '702' from collection-day-702.aspx).",
+        "data": {
+          "area_number": "Area Number"
+        },
+        "data_description": {
+          "area_number": "Your Auckland Council collection area number (e.g., 702)"
+        }
+      }
+    },
+    "error": {
+      "invalid_area": "Invalid area number. Please check the number and try again.",
+      "cannot_connect": "Unable to connect to Auckland Council. Please try again later."
+    },
+    "abort": {
+      "already_configured": "This area is already configured."
+    }
+  }
+}
