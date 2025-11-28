@@ -15,7 +15,7 @@ A Home Assistant custom integration for Auckland Waste Collection that fetches r
 
 ## Screenshot
 
-<img src="images/card-example.png" alt="Waste Collection Card" width="400">
+<img src="images/card-sample.png" alt="Waste Collection Card" width="400">
 
 ## Installation
 
