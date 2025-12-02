@@ -27,7 +27,7 @@ WASTE_TYPE_ICONS = {
 UPDATE_INTERVAL_HOURS = 12
 
 # API URL
-API_URL = "https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/{area_number}.html"
+API_URL = "https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/{area_number}.html"
 
 # Request headers
 HEADERS = {
