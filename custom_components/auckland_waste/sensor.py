@@ -84,7 +84,7 @@ class AucklandWasteSensor(CoordinatorEntity[AucklandWasteCoordinator], SensorEnt
             return {}
 
         now = datetime.now()
-        days_until = (collection.date - now).days
+        days_until = (collection.date.date() - now.date()).days
 
         return {
             "date": collection.date.strftime("%Y-%m-%d"),
