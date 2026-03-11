@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -83,7 +84,7 @@ class AucklandWasteSensor(CoordinatorEntity[AucklandWasteCoordinator], SensorEnt
         if collection is None:
             return {}
 
-        now = datetime.now()
+        now = datetime.now(ZoneInfo("Pacific/Auckland"))
         days_until = (collection.date.date() - now.date()).days
 
         return {

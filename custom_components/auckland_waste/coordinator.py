@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import logging
 import re
 
@@ -38,19 +39,22 @@ class Collection:
 def parse_date(date_str: str) -> datetime | None:
     """Parse a date string like 'Wednesday, 8 October' to a datetime object."""
     try:
+        nz_tz = ZoneInfo("Pacific/Auckland")
+        now = datetime.now(nz_tz)
+
         # Remove the day name if present
         if "," in date_str:
             date_str = date_str.split(",", 1)[1].strip()
 
         # Try to parse with current year first
-        current_year = datetime.now().year
+        current_year = now.year
 
         # Parse "8 October" format
-        parsed = datetime.strptime(f"{date_str} {current_year}", "%d %B %Y")
+        parsed = datetime.strptime(f"{date_str} {current_year}", "%d %B %Y").replace(tzinfo=nz_tz)
 
         # If the date is in the past by more than a week, assume it's next year
-        if parsed < datetime.now() - timedelta(days=7):
-            parsed = datetime.strptime(f"{date_str} {current_year + 1}", "%d %B %Y")
+        if parsed < now - timedelta(days=7):
+            parsed = datetime.strptime(f"{date_str} {current_year + 1}", "%d %B %Y").replace(tzinfo=nz_tz)
 
         return parsed
     except ValueError as e:
