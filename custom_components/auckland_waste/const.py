@@ -30,10 +30,12 @@ UPDATE_INTERVAL_HOURS = 12
 API_URL = "https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/{area_number}.html"
 
 # Request headers
-# An Accept header is required; without it the council site responds with
-# HTTP 406 (Not Acceptable).
+# The council site's WAF returns HTTP 406 (Not Acceptable) when either:
+#   - no Accept header is sent, or
+#   - the User-Agent claims an outdated browser (Chrome <= 120 is blocked).
+# Keep the User-Agent reasonably current if 406 errors reappear.
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
 }
