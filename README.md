@@ -72,6 +72,21 @@ Each sensor includes the following attributes:
 - `is_tomorrow` - True if collection is tomorrow
 - `waste_type` - Type of waste (rubbish, recycle, food-waste)
 - `area_number` - Your Auckland Council area number
+- `<YYYY-MM-DD>` - The next collection date as the attribute name, with the bin name as its value (e.g. `2026-09-10: "Food scraps"`)
+
+### Third-Party Cards
+
+The date-keyed attribute makes the sensors compatible with cards built for the [Waste Collection Schedule](https://github.com/mampfes/hacs_waste_collection_schedule) `upcoming` format, such as [wheelie-bin-card](https://github.com/Greminn/wheelie-bin-card):
+
+```yaml
+type: custom:wheelie-bin-card
+entity:
+  - sensor.auckland_waste_702_rubbish
+  - sensor.auckland_waste_702_recycling
+  - sensor.auckland_waste_702_food_waste
+show_food_scraps: true
+disabled_bins: ["garden", "glass"]
+```
 
 ## Custom Card
 

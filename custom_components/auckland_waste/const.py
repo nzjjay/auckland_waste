@@ -16,6 +16,14 @@ WASTE_TYPE_NAMES = {
     WASTE_TYPE_FOOD_WASTE: "Food Waste",
 }
 
+# Labels for the date-keyed attribute (e.g. "2026-09-10": "Food scraps").
+# These match the bin names used by third-party cards such as wheelie-bin-card.
+WASTE_TYPE_COLLECTION_LABELS = {
+    WASTE_TYPE_RUBBISH: "Rubbish",
+    WASTE_TYPE_RECYCLE: "Recycling",
+    WASTE_TYPE_FOOD_WASTE: "Food scraps",
+}
+
 # Icons for waste types
 WASTE_TYPE_ICONS = {
     WASTE_TYPE_RUBBISH: "mdi:trash-can",
