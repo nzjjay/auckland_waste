@@ -1,12 +1,12 @@
 {
   "domain": "auckland_waste",
   "name": "Auckland Waste Collection",
-  "codeowners": [],
+  "codeowners": ["@nzjjay"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/your-username/auckland_waste",
+  "documentation": "https://github.com/nzjjay/auckland_waste",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/your-username/auckland_waste/issues",
+  "issue_tracker": "https://github.com/nzjjay/auckland_waste/issues",
   "requirements": ["beautifulsoup4>=4.9.0"],
   "version": "1.3.1"
 }

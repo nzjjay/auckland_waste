@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_AREA_NUMBER,
     DOMAIN,
+    WASTE_TYPE_COLLECTION_LABELS,
     WASTE_TYPE_FOOD_WASTE,
     WASTE_TYPE_ICONS,
     WASTE_TYPE_NAMES,
@@ -86,9 +87,10 @@ class AucklandWasteSensor(CoordinatorEntity[AucklandWasteCoordinator], SensorEnt
 
         now = datetime.now(ZoneInfo("Pacific/Auckland"))
         days_until = (collection.date.date() - now.date()).days
+        date_str = collection.date.strftime("%Y-%m-%d")
 
         return {
-            "date": collection.date.strftime("%Y-%m-%d"),
+            "date": date_str,
             "day_of_week": collection.date.strftime("%A"),
             "formatted_date": collection.date.strftime("%A, %d %B"),
             "days_until": days_until,
@@ -96,4 +98,8 @@ class AucklandWasteSensor(CoordinatorEntity[AucklandWasteCoordinator], SensorEnt
             "is_tomorrow": days_until == 1,
             "waste_type": self._waste_type,
             "area_number": self._area_number,
+            # Date-keyed attribute for cards like wheelie-bin-card
+            date_str: WASTE_TYPE_COLLECTION_LABELS.get(
+                self._waste_type, self._attr_name
+            ),
         }
