@@ -81,6 +81,8 @@ class AucklandWasteCoordinator(DataUpdateCoordinator):
         """Fetch data from Auckland Council."""
         try:
             return await self._fetch_collections()
+        except UpdateFailed:
+            raise
         except Exception as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
 
@@ -135,6 +137,17 @@ class AucklandWasteCoordinator(DataUpdateCoordinator):
                 existing = collections[waste_type]
                 if existing is None or collection_date < existing.date:
                     collections[waste_type] = Collection(collection_date, waste_type)
+
+        # The council page sometimes returns HTTP 200 with no collection dates.
+        # Keep the last good data rather than blanking every sensor.
+        if all(c is None for c in collections.values()):
+            if self.data and any(c is not None for c in self.data.values()):
+                _LOGGER.warning(
+                    "No collection dates found for area %s; keeping previous data",
+                    self.area_number,
+                )
+                return self.data
+            raise UpdateFailed("No collection dates found on council page")
 
         _LOGGER.debug("Fetched collections: %s", collections)
         return collections
