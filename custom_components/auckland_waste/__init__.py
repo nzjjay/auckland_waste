@@ -19,6 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Auckland Waste Collection from a config entry."""
     coordinator = AucklandWasteCoordinator(hass, entry)
 
+    await coordinator.async_restore_data()
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})

@@ -7,6 +7,24 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
+  tests:
+    name: Recovery Regression Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install test dependencies
+        run: pip install homeassistant==2026.11.2 curl_cffi==0.16.3 beautifulsoup4
+
+      - name: Test automatic recovery
+        run: python -m unittest discover -s tests -v
+
   hacs:
     name: HACS Validation
     runs-on: ubuntu-latest

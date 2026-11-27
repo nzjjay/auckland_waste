@@ -71,25 +71,39 @@ class AucklandWasteSensor(CoordinatorEntity[AucklandWasteCoordinator], SensorEnt
         }
 
     @property
+    def available(self) -> bool:
+        """Keep unexpired cached dates available while automatic recovery runs."""
+        return super().available and self.coordinator.is_upcoming(
+            (self.coordinator.data or {}).get(self._waste_type)
+        )
+
+    @property
     def native_value(self) -> str | None:
         """Return the next collection date."""
-        collection: Collection | None = self.coordinator.data.get(self._waste_type)
-        if collection is None:
+        collection: Collection | None = (self.coordinator.data or {}).get(self._waste_type)
+        if not self.coordinator.is_upcoming(collection):
             return None
         return collection.date.strftime("%Y-%m-%d")
 
     @property
     def extra_state_attributes(self) -> dict:
         """Return extra state attributes."""
-        collection: Collection | None = self.coordinator.data.get(self._waste_type)
-        if collection is None:
-            return {}
+        freshness = {
+            "data_stale": self.coordinator.data_stale,
+            "last_successful_update": self.coordinator.last_successful_update.isoformat()
+            if self.coordinator.last_successful_update else None,
+            "last_error": self.coordinator.last_error,
+        }
+        collection: Collection | None = (self.coordinator.data or {}).get(self._waste_type)
+        if not self.coordinator.is_upcoming(collection):
+            return freshness
 
         now = datetime.now(ZoneInfo("Pacific/Auckland"))
         days_until = (collection.date.date() - now.date()).days
         date_str = collection.date.strftime("%Y-%m-%d")
 
         return {
+            **freshness,
             "date": date_str,
             "day_of_week": collection.date.strftime("%A"),
             "formatted_date": collection.date.strftime("%A, %d %B"),
