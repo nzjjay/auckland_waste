@@ -4,13 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import API_URL, CONF_AREA_NUMBER, DOMAIN, HEADERS
+from .client import fetch_collection_page
+from .const import CONF_AREA_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,16 +23,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_area_number(area_number: str) -> bool:
     """Validate that the area number is valid by checking the API."""
-    url = API_URL.format(area_number=area_number)
-
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=HEADERS) as response:
-                if response.status == 200:
-                    html = await response.text()
-                    # Check if the page has collection data
-                    return "acpl-icon" in html
-                return False
+        html = await fetch_collection_page(area_number)
+        return "acpl-icon" in html
     except Exception:
         return False
 
