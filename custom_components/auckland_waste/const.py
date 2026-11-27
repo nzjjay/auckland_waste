@@ -36,12 +36,3 @@ UPDATE_INTERVAL_HOURS = 12
 
 # API URL
 API_URL = "https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/{area_number}.html"
-
-# Request headers
-# The council site's WAF checks both Accept and User-Agent headers.
-# This Firefox User-Agent resolves the HTTP 406 responses reported in #10.
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-}

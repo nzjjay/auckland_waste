@@ -4,20 +4,17 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import logging
-import re
 
-import aiohttp
 from bs4 import BeautifulSoup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .client import fetch_collection_page
 from .const import (
-    API_URL,
     CONF_AREA_NUMBER,
     DOMAIN,
-    HEADERS,
     UPDATE_INTERVAL_HOURS,
     WASTE_TYPE_FOOD_WASTE,
     WASTE_TYPE_RECYCLE,
@@ -88,15 +85,7 @@ class AucklandWasteCoordinator(DataUpdateCoordinator):
 
     async def _fetch_collections(self) -> dict[str, Collection | None]:
         """Fetch collection data from Auckland Council website."""
-        url = API_URL.format(area_number=self.area_number)
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=HEADERS) as response:
-                if response.status != 200:
-                    raise UpdateFailed(
-                        f"Error fetching data: HTTP {response.status}"
-                    )
-                html = await response.text()
+        html = await fetch_collection_page(self.area_number)
 
         soup = BeautifulSoup(html, "html.parser")
         collections: dict[str, Collection | None] = {
