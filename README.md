@@ -73,6 +73,30 @@ Each sensor includes the following attributes:
 - `waste_type` - Type of waste (rubbish, recycle, food-waste)
 - `area_number` - Your Auckland Council area number
 - `<YYYY-MM-DD>` - The next collection date as the attribute name, with the bin name as its value (e.g. `2026-09-10: "Food scraps"`)
+- `data_stale` - True when showing cached dates after a failed refresh
+- `last_successful_update` - Time the council last returned collection dates
+- `last_error` - Most recent refresh error, cleared after recovery
+
+### Automatic Recovery
+
+If a request is blocked or times out, the integration tries Chrome, Safari, and
+Firefox browser profiles using fresh sessions. It remembers the working profile,
+including across restarts. Each refresh makes at most three requests within a
+50-second budget; permanent HTTP errors and rate limits are not retried immediately.
+
+Failed refreshes trigger another check after 15 minutes, increasing to a maximum
+of six hours during prolonged outages. A longer server `Retry-After` delay takes
+precedence, up to 24 hours. Successful updates return to the normal 12-hour interval.
+
+The integration saves the last collection dates locally so they survive Home
+Assistant restarts. Unexpired cached dates remain available during an outage,
+with `data_stale: true`. Expired dates become unavailable rather than being
+guessed or advanced to another week. Updates resume automatically when requests
+succeed again. On first setup without usable cached dates, Home Assistant retries
+setup automatically.
+
+These measures handle temporary outages and changes that an installed browser
+profile can accommodate. Major council website changes can still require an update.
 
 ### Third-Party Cards
 

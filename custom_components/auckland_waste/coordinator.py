@@ -3,15 +3,17 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from email.utils import parsedate_to_datetime
 import logging
 
 from bs4 import BeautifulSoup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .client import fetch_collection_page
+from .client import CollectionClient
 from .const import (
     CONF_AREA_NUMBER,
     DOMAIN,
@@ -66,6 +68,12 @@ class AucklandWasteCoordinator(DataUpdateCoordinator):
         """Initialize the coordinator."""
         self.area_number = entry.data[CONF_AREA_NUMBER]
         self.entry = entry
+        self.client = CollectionClient()
+        self.data_stale = True
+        self.last_successful_update: datetime | None = None
+        self.last_error: str | None = None
+        self._failure_count = 0
+        self._store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
 
         super().__init__(
             hass,
@@ -77,15 +85,87 @@ class AucklandWasteCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Collection | None]:
         """Fetch data from Auckland Council."""
         try:
-            return await self._fetch_collections()
-        except UpdateFailed:
-            raise
+            collections = await self._fetch_collections()
         except Exception as err:
+            self.data_stale = True
+            self.last_error = str(err) or type(err).__name__
+            self._failure_count += 1
+            minutes = min(15 * 2 ** min(self._failure_count - 1, 5), 360)
+            self.update_interval = timedelta(minutes=minutes)
+            # Respect Retry-After on rate limits and temporary service outages.
+            response = getattr(err, "response", None)
+            if response is not None:
+                retry_after = response.headers.get("Retry-After")
+                if retry_after:
+                    try:
+                        seconds = float(retry_after)
+                    except ValueError:
+                        try:
+                            seconds = (
+                                parsedate_to_datetime(retry_after)
+                                - datetime.now(ZoneInfo("UTC"))
+                            ).total_seconds()
+                        except (ValueError, TypeError, OverflowError):
+                            seconds = 0
+                    if seconds > self.update_interval.total_seconds():
+                        self.update_interval = timedelta(seconds=min(seconds, 86400))
+            if self.data and any(self.is_upcoming(c) for c in self.data.values()):
+                _LOGGER.warning(
+                    "Collection refresh failed (%s); using cached dates and retrying in %s",
+                    err, self.update_interval,
+                )
+                return self.data
             raise UpdateFailed(f"Error fetching data: {err}") from err
+
+        if self._failure_count:
+            _LOGGER.info("Collection updates recovered using %s", self.client.browser_profile)
+        self._failure_count = 0
+        self.update_interval = timedelta(hours=UPDATE_INTERVAL_HOURS)
+        self.data_stale = False
+        self.last_error = None
+        self.last_successful_update = datetime.now(ZoneInfo("Pacific/Auckland"))
+        try:
+            await self._store.async_save({
+                "collections": {
+                    waste_type: c.date.isoformat() if c is not None else None
+                    for waste_type, c in collections.items()
+                },
+                "last_successful_update": self.last_successful_update.isoformat(),
+                "browser_profile": self.client.browser_profile,
+            })
+        except OSError:
+            _LOGGER.warning("Could not save collection cache", exc_info=True)
+        return collections
+
+    @staticmethod
+    def is_upcoming(collection: Collection | None) -> bool:
+        """Never present an expired cached date as an upcoming collection."""
+        return collection is not None and collection.date.date() >= datetime.now(
+            ZoneInfo("Pacific/Auckland")
+        ).date()
+
+    async def async_restore_data(self) -> None:
+        """Restore unexpired cached dates before the first network refresh."""
+        try:
+            saved = await self._store.async_load()
+            if not saved:
+                return
+            self.client = CollectionClient(saved.get("browser_profile", "chrome"))
+            restored = {}
+            for waste_type in (WASTE_TYPE_RUBBISH, WASTE_TYPE_RECYCLE, WASTE_TYPE_FOOD_WASTE):
+                value = saved["collections"].get(waste_type)
+                collection = Collection(datetime.fromisoformat(value), waste_type) if value else None
+                restored[waste_type] = collection if self.is_upcoming(collection) else None
+            last_update = datetime.fromisoformat(saved["last_successful_update"])
+            if any(c is not None for c in restored.values()):
+                self.data = restored
+                self.last_successful_update = last_update
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            _LOGGER.warning("Could not restore collection cache; fetching fresh data", exc_info=True)
 
     async def _fetch_collections(self) -> dict[str, Collection | None]:
         """Fetch collection data from Auckland Council website."""
-        html = await fetch_collection_page(self.area_number)
+        html = await self.client.fetch(self.area_number)
 
         soup = BeautifulSoup(html, "html.parser")
         collections: dict[str, Collection | None] = {
@@ -127,15 +207,7 @@ class AucklandWasteCoordinator(DataUpdateCoordinator):
                 if existing is None or collection_date < existing.date:
                     collections[waste_type] = Collection(collection_date, waste_type)
 
-        # The council page sometimes returns HTTP 200 with no collection dates.
-        # Keep the last good data rather than blanking every sensor.
         if all(c is None for c in collections.values()):
-            if self.data and any(c is not None for c in self.data.values()):
-                _LOGGER.warning(
-                    "No collection dates found for area %s; keeping previous data",
-                    self.area_number,
-                )
-                return self.data
             raise UpdateFailed("No collection dates found on council page")
 
         _LOGGER.debug("Fetched collections: %s", collections)
